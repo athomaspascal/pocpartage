@@ -1,6 +1,5 @@
 package com.example.vaadinupload;
 
-import com.vaadin.server.FileResource;
 import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.Image;
@@ -12,14 +11,14 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 
-class ImageReceiver implements Upload.Receiver, Upload.SucceededListener {
+public class ImageReceiver implements Upload.Receiver, Upload.SucceededListener {
     private static final long serialVersionUID = -1276759102490466761L;
 
     public File file;
 
     Image image;
 
-    ImageReceiver(Image im)
+    public ImageReceiver(Image im)
     {
         image=im;
     }

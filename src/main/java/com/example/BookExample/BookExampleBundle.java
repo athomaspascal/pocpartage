@@ -1,4 +1,4 @@
-package com.example;
+package com.example.BookExample;
 
 
 public interface BookExampleBundle extends AnyBookExampleBundle {

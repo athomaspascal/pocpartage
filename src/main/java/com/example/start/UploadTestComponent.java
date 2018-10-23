@@ -1,57 +1,50 @@
-package com.example.vaadinupload;
+package com.example.start;
 
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
-
-import com.example.AdvancedFileDownloader;
-import com.example.BookExampleBundle;
+import com.example.BookExample.BookExampleBundle;
+import com.example.vaadinupload.AdvancedFileDownloader;
+import com.example.vaadinupload.FileSystemDataProvider;
+import com.example.vaadinupload.ImageReceiver;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.FileDownloader;
-import com.vaadin.server.FileResource;
-import com.vaadin.server.Page;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.ui.*;
-import com.vaadin.ui.Upload.FailedEvent;
-import com.vaadin.ui.Upload.FailedListener;
-import com.vaadin.ui.Upload.ProgressListener;
-import com.vaadin.ui.Upload.Receiver;
-import com.vaadin.ui.Upload.StartedEvent;
-import com.vaadin.ui.Upload.StartedListener;
-import com.vaadin.ui.Upload.SucceededEvent;
-import com.vaadin.ui.Upload.SucceededListener;
+import com.vaadin.ui.Upload.*;
 import com.vaadin.ui.renderers.DateRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
-public class UploadTestUI extends CustomComponent implements BookExampleBundle {
+public class UploadTestComponent extends CustomComponent implements BookExampleBundle {
     private static final long serialVersionUID = -4292553844521293140L;
     private TreeGrid treeGrid;
 
     public void init(String context) {
         HorizontalLayout layout = new HorizontalLayout();
+        VerticalLayout vLayout = new VerticalLayout();
 
         if ("basic".equals(context))
-            basic(layout);
+            basic(vLayout);
         else if ("advanced".equals(context))
-            advanced(layout);
+            advanced(vLayout);
         else
             layout.addComponent(new Label("Invalid context: " + context));
+        VerticalLayout vLayout2 = new VerticalLayout();
 
-        downloadComponent(layout);
+        downloadComponent(vLayout2);
+        partageComponent(vLayout2);
+        layout.addComponents(vLayout,vLayout2);
         setCompositionRoot(layout);
     }
 
-    void basic(HorizontalLayout layout) {
+    void basic(VerticalLayout layout) {
         // BEGIN-EXAMPLE: component.upload.basic
         // Show uploaded file in this placeholder
         final Image image = new Image("");
@@ -113,7 +106,15 @@ public class UploadTestUI extends CustomComponent implements BookExampleBundle {
         // END-EXAMPLE: component.upload.basic
 
         // Create uploads directory
-        File uploads = new File("/tmp/uploads");
+        Properties application = new Properties();
+        String loadDirectory = "c:\\tmp";
+        try {
+            application.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"));
+            loadDirectory =application.getProperty("upload.dir");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        File uploads = new File(loadDirectory );
         if (!uploads.exists() && !uploads.mkdir())
             layout.addComponent(new Label("ERROR: Could not create upload dir"));
 
@@ -123,7 +124,7 @@ public class UploadTestUI extends CustomComponent implements BookExampleBundle {
     }
 
 
-    void advanced(HorizontalLayout layout) {
+    void advanced(VerticalLayout layout) {
         // BEGIN-EXAMPLE: component.upload.advanced
         class UploadBox extends CustomComponent
                 implements Receiver, ProgressListener,
@@ -247,7 +248,38 @@ public class UploadTestUI extends CustomComponent implements BookExampleBundle {
         }, "myImage.png");
     }
 
-    public void downloadComponent(HorizontalLayout mainLayout) {
+    public void partageComponent(VerticalLayout mainLayout) {
+        Panel panel = new Panel("Partage document");
+        panel.setWidth("720");
+        Label info = new Label("Select a file");
+        HorizontalLayout panelContent = new HorizontalLayout();
+        panelContent.setMargin(true);
+        if (treeGrid == null)
+            treeGrid = displayGrid(true);
+        Panel panelDestination = new Panel("Destination");
+        Label infoDestination = new Label("Select a Destination");
+        List<String> data = Arrays.asList("SASSHARE","Risk", "Pilotage", "Marketing");
+        VerticalLayout v1 = new VerticalLayout();
+        VerticalLayout v2 = new VerticalLayout();
+        RadioButtonGroup<String> targetGroup = new RadioButtonGroup<String>("Select a Target Group ", data);
+        targetGroup.setItemCaptionGenerator(item -> "Group " + item);
+        targetGroup.setSelectedItem(data.get(0));
+        targetGroup.setCaption("Select a Target group");
+        VerticalLayout v3 = new VerticalLayout();
+        v3.addComponents(targetGroup);
+        panelDestination.setContent(v3);
+        Button copy = new Button("Copy");
+        v2.addComponents(infoDestination, panelDestination,copy);
+
+
+        v1.addComponents(info,treeGrid);
+        panelContent.addComponents(v1,v2);
+        panel.setContent(panelContent);
+        panel.setSizeFull();
+        mainLayout.addComponent(panel);
+    }
+
+    public void downloadComponent(VerticalLayout mainLayout) {
 
         TextField inputFilepathField = new TextField();
         inputFilepathField.setSizeFull();
@@ -259,7 +291,7 @@ public class UploadTestUI extends CustomComponent implements BookExampleBundle {
         select.addClickListener(eventChoose ->{
            Window newWindow = new Window();
            VerticalLayout vWindow = new VerticalLayout();
-           Label liste = new Label("Liste des fichiers ");
+           Label liste = new Label("File list");
            treeGrid = displayGrid();
            Button selectionFichier = new Button("OK");
            selectionFichier.addClickListener(selection-> {
@@ -331,6 +363,11 @@ public class UploadTestUI extends CustomComponent implements BookExampleBundle {
 
     public TreeGrid  displayGrid()
     {
+        return displayGrid(false);
+    }
+
+    public TreeGrid  displayGrid(boolean fullSize)
+    {
         //-----------------------
         TreeGrid<File> newTreeGrid = new TreeGrid<>();
 
@@ -350,12 +387,16 @@ public class UploadTestUI extends CustomComponent implements BookExampleBundle {
         newTreeGrid.addColumn(file -> file.isDirectory() ? "--" : file.length() + " bytes")
                 .setCaption("Size").setId("file-size");
 
+        DateFormat fmt = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
         newTreeGrid.addColumn(file -> new Date(file.lastModified()),
-                new DateRenderer()).setCaption("Last Modified")
+                new DateRenderer(fmt)).setCaption("Last Modified")
                 .setId("file-last-modified");
 
         newTreeGrid.setHierarchyColumn("file-name");
-        newTreeGrid.setSizeFull();
+        if (fullSize == false)
+            newTreeGrid.setSizeFull();
+        else
+            newTreeGrid.setSizeUndefined();
         return newTreeGrid;
         //-------------------------
     }

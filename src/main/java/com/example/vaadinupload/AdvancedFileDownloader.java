@@ -1,24 +1,12 @@
-package com.example;
+package com.example.vaadinupload;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Logger;
-
-import com.vaadin.server.ConnectorResource;
-import com.vaadin.server.DownloadStream;
-import com.vaadin.server.FileDownloader;
-import com.vaadin.server.Resource;
-import com.vaadin.server.StreamResource;
-import com.vaadin.server.VaadinService;
-import com.vaadin.server.VaadinSession;
+import com.vaadin.server.*;
 import com.vaadin.server.StreamResource.StreamSource;
-import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinResponse;
-import com.vaadin.ui.*;
+import com.vaadin.ui.AbstractComponent;
+
+import java.io.*;
+import java.util.logging.Logger;
 
 
 public class AdvancedFileDownloader extends FileDownloader {

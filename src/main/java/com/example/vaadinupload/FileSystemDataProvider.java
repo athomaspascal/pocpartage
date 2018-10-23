@@ -4,24 +4,17 @@ package com.example.vaadinupload;
 import com.vaadin.data.provider.AbstractBackEndHierarchicalDataProvider;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.QuerySortOrder;
-import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.data.sort.SortDirection;
-import com.vaadin.ui.TreeGrid;
-import com.vaadin.ui.renderers.DateRenderer;
-import com.vaadin.ui.renderers.HtmlRenderer;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class FileSystemDataProvider extends
+public class FileSystemDataProvider extends
         AbstractBackEndHierarchicalDataProvider<File, FilenameFilter> {
 
     private static final Comparator<File> nameComparator = (fileA, fileB) -> {

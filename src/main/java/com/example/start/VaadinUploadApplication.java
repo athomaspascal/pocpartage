@@ -1,4 +1,4 @@
-package com.example.vaadinupload;
+package com.example.start;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.example.vaadinupload;
+package com.example.start;
 
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
@@ -9,11 +9,8 @@ import org.springframework.util.FastByteArrayOutputStream;
 
 import java.io.OutputStream;
 
-/**
- * @author Alejandro Duarte
- */
 @SpringUI
-@Push // enable UI modifications from background threads in the server
+@Push
 @Theme("mytheme")
 public class VaadinUI extends UI implements Upload.Receiver, Upload.SucceededListener {
 
@@ -29,27 +26,8 @@ public class VaadinUI extends UI implements Upload.Receiver, Upload.SucceededLis
 
     @Override
     protected void init(VaadinRequest request) {
-
-        /*
-        // create an Upload component and set a Receiver and a SucceededListener
-        upload = new Upload("Upload a file", this);
-
-        upload.addSucceededListener(this);
-
-
-
-        // create an initially invisible and indeterminate ProgressBar component
-        progressBar = new ProgressBar();
-        progressBar.setVisible(false);
-        progressBar.setIndeterminate(true);
-        progressBar.setCaption("Uploading...");
-
-        // configure the layout
-        VerticalLayout mainLayout = new VerticalLayout(upload, progressBar);
-        */
-
         VerticalLayout mainLayout = new VerticalLayout();
-        UploadTestUI u = new UploadTestUI();
+        UploadTestComponent u = new UploadTestComponent();
         u.init("basic");
         mainLayout.addComponent(u);
 
