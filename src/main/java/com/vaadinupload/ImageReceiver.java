@@ -1,4 +1,4 @@
-package com.example.vaadinupload;
+package com.vaadinupload;
 
 import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;

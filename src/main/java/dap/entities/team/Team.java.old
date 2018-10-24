@@ -1,0 +1,62 @@
+package dap.entities.team;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.util.Objects;
+
+@Entity
+@Table(name = "Team")
+public class Team {
+    private String nomteam;
+    private int id;
+
+    @javax.persistence.Basic
+    @javax.persistence.Column(name = "NAME_DIVISION", nullable = false, length = 50)
+    public String getNameDivision() {
+        return nameDivision;
+    }
+
+    public void setNameDivision(String nameDivision) {
+        this.nameDivision = nameDivision;
+    }
+
+    private String nameDivision;
+
+
+    @javax.persistence.Basic
+    @javax.persistence.Column(name = "NOM_TEAM", nullable = true, length = 50)
+    public String getNomteam() {
+        return nomteam;
+    }
+
+    public void setNomteam(String nomteam) {
+        this.nomteam = nomteam;
+    }
+
+    @Id
+    @GeneratedValue
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Team team = (Team) o;
+        return id == team.id &&
+                Objects.equals(nomteam, team.nomteam);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(nomteam, id);
+    }
+}

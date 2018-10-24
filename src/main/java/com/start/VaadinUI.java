@@ -1,4 +1,4 @@
-package com.example.start;
+package com.start;
 
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
@@ -8,6 +8,8 @@ import com.vaadin.ui.*;
 import org.springframework.util.FastByteArrayOutputStream;
 
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.Set;
 
 @SpringUI
 @Push
@@ -27,8 +29,26 @@ public class VaadinUI extends UI implements Upload.Receiver, Upload.SucceededLis
     @Override
     protected void init(VaadinRequest request) {
         VerticalLayout mainLayout = new VerticalLayout();
+        Map<String, String[]> parameterMap = request.getParameterMap();
+        int i = 0;
+        Label userLabel ;
+        Set<String> listParam = parameterMap.keySet();
+        String user = null;
+        for(String p:listParam)
+        {
+            if (p.equalsIgnoreCase("user")) {
+                String[] values = parameterMap.get(p);
+                user = values[0];
+                userLabel= new Label("UTILISATEUR:"+ user);
+                userLabel.setStyleName("titre");
+                mainLayout.addComponents(userLabel);
+            }
+        }
         UploadTestComponent u = new UploadTestComponent();
+        u.setUser(user);
         u.init("basic");
+
+
         mainLayout.addComponent(u);
 
         setContent(mainLayout);

@@ -34,5 +34,13 @@
 @mixin mytheme {
   @include valo;
 
+  .v-label-titre {
+    background: blue;
+    color: white;
+    font-size: 24pt;
+    line-height: 24pt;
+    padding: 5px;
+  }
+
   // Insert your own theme rules here
 }

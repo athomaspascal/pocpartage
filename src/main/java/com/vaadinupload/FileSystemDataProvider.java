@@ -1,4 +1,4 @@
-package com.example.vaadinupload;
+package com.vaadinupload;
 
 
 import com.vaadin.data.provider.AbstractBackEndHierarchicalDataProvider;

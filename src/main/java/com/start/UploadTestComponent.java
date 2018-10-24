@@ -1,10 +1,7 @@
-package com.example.start;
+package com.start;
 
 
-import com.example.BookExample.BookExampleBundle;
-import com.example.vaadinupload.AdvancedFileDownloader;
-import com.example.vaadinupload.FileSystemDataProvider;
-import com.example.vaadinupload.ImageReceiver;
+import com.BookExample.BookExampleBundle;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
@@ -12,10 +9,18 @@ import com.vaadin.ui.*;
 import com.vaadin.ui.Upload.*;
 import com.vaadin.ui.renderers.DateRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
+import com.vaadinupload.AdvancedFileDownloader;
+import com.vaadinupload.FileSystemDataProvider;
+import com.vaadinupload.ImageReceiver;
+import dap.entities.JPAService;
+import dap.entities.team.Team;
+import dap.entities.user.User;
+import dap.entities.user.UserRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 
 import javax.imageio.ImageIO;
+import javax.persistence.EntityManager;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.text.DateFormat;
@@ -25,6 +30,17 @@ import java.util.*;
 public class UploadTestComponent extends CustomComponent implements BookExampleBundle {
     private static final long serialVersionUID = -4292553844521293140L;
     private TreeGrid treeGrid;
+    String user;
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+
 
     public void init(String context) {
         HorizontalLayout layout = new HorizontalLayout();
@@ -45,13 +61,9 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
     }
 
     void basic(VerticalLayout layout) {
-        // BEGIN-EXAMPLE: component.upload.basic
-        // Show uploaded file in this placeholder
         final Image image = new Image("");
         image.setVisible(false);
 
-        // Implement both receiver that saves upload in a file and
-        // listener for successful upload
 
         ImageReceiver receiver = new ImageReceiver(image);
 
@@ -94,7 +106,15 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         VerticalLayout panelContent = new VerticalLayout();
         panelContent.setMargin(true);
 
-        List<String> data = Arrays.asList("Risk", "Pilotage", "Marketing");
+        List<String> data = new ArrayList<>();
+        EntityManager entityManager = JPAService.getFactory().createEntityManager();
+        User user = UserRepository.getByName(this.user, entityManager);
+        Team t = user.getTeamid();
+
+        data.add(t.getNomteam());
+
+
+
 
         RadioButtonGroup<String> targetGroup = new RadioButtonGroup<String>("Select a Target Group ", data);
         targetGroup.setItemCaptionGenerator(item -> "Group " + item);
@@ -249,7 +269,7 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
     }
 
     public void partageComponent(VerticalLayout mainLayout) {
-        Panel panel = new Panel("Partage document");
+        Panel panel = new Panel("Sharing file");
         panel.setWidth("720");
         Label info = new Label("Select a file");
         HorizontalLayout panelContent = new HorizontalLayout();
@@ -258,7 +278,12 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
             treeGrid = displayGrid(true);
         Panel panelDestination = new Panel("Destination");
         Label infoDestination = new Label("Select a Destination");
-        List<String> data = Arrays.asList("SASSHARE","Risk", "Pilotage", "Marketing");
+        List<String> data = new ArrayList<>();
+        EntityManager entityManager = JPAService.getFactory().createEntityManager();
+        User user = UserRepository.getByName(this.user, entityManager);
+        Team t = user.getTeamid();
+        data.add(t.getNomteam());
+
         VerticalLayout v1 = new VerticalLayout();
         VerticalLayout v2 = new VerticalLayout();
         RadioButtonGroup<String> targetGroup = new RadioButtonGroup<String>("Select a Target Group ", data);

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
+    <persistence-unit name="test-pu">
+
+        <class>dap.entities.team.Team</class>
+        <class>dap.entities.enterprise.Division</class>
+        <class>dap.entities.contacts.Contacts</class>
+        <class>dap.entities.formulaire.FormulaireParameter</class>
+        <class>dap.entities.formulaire.FormulaireValue</class>
+        <class>dap.entities.formulaire.FormulaireReponse</class>
+        <class>dap.entities.formulaire.FormulaireResultat</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:h2:~/h2"/>
+            <property name="javax.persistence.jdbc.user" value="sa"/>
+            <property name="javax.persistence.jdbc.password" value=""/>
+            <!--
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
+            -->
+            <property name="toplink.jdbc.url" value="jdbc:h2:~/h2"/>
+            <property name="toplink.jdbc.driver" value="org.h2.Driver"/>
+            <property name="hibernate.connection.url" value="jdbc:h2:~/h2"/>
+            <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
+            <property name="openjpa.ConnectionURL" value="jdbc:h2:~/h2"/>
+            <property name="openjpa.ConnectionDriverName" value="org.h2.Driver"/>
+            <property name="eclipselink.jdbc.url" value="jdbc:h2:~/h2"/>
+            <property name="eclipselink.jdbc.driver" value="org.h2.Driver"/>
+        </properties>
+    </persistence-unit>
+</persistence>

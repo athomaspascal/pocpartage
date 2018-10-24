@@ -1,4 +1,4 @@
-package com.example.start;
+package com.start;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

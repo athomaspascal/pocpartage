@@ -1,0 +1,1 @@
+INSERT INTO PUBLIC.CONTACTS (ID, NAME, CONTACT_EMAIL, TEAM_ID) VALUES (1, 'contact', 'contact@email.com', 33);
