@@ -9,6 +9,7 @@
         <class>dap.entities.formulaire.FormulaireValue</class>
         <class>dap.entities.formulaire.FormulaireReponse</class>
         <class>dap.entities.formulaire.FormulaireResultat</class>
+        <class>dap.entities.share.ShareSpace</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:~/h2"/>

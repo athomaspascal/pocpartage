@@ -2,14 +2,15 @@ package com.start;
 
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
+import com.vaadin.navigator.Navigator;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.*;
 import org.springframework.util.FastByteArrayOutputStream;
 
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @SpringUI
 @Push
@@ -18,40 +19,29 @@ public class VaadinUI extends UI implements Upload.Receiver, Upload.SucceededLis
 
     private Upload upload;
     private ProgressBar progressBar;
+    Navigator navigator;
 
     private final ProcessingService processingService;
     private FastByteArrayOutputStream outputStream;
-
+    public Map<String, String[]> parameterMap = new HashMap<>();
     public VaadinUI(ProcessingService processingService) { // processingService is injected by Spring
         this.processingService = processingService;
     }
 
     @Override
     protected void init(VaadinRequest request) {
-        VerticalLayout mainLayout = new VerticalLayout();
-        Map<String, String[]> parameterMap = request.getParameterMap();
-        int i = 0;
-        Label userLabel ;
-        Set<String> listParam = parameterMap.keySet();
-        String user = null;
-        for(String p:listParam)
-        {
-            if (p.equalsIgnoreCase("user")) {
-                String[] values = parameterMap.get(p);
-                user = values[0];
-                userLabel= new Label("UTILISATEUR:"+ user);
-                userLabel.setStyleName("titre");
-                mainLayout.addComponents(userLabel);
-            }
-        }
-        UploadTestComponent u = new UploadTestComponent();
-        u.setUser(user);
-        u.init("basic");
+        parameterMap = request.getParameterMap();
+        VerticalLayout v = new VerticalLayout();
+        navigator = new Navigator(this, v);
+        navigator.addView("Default", ViewDefault.class);
+        navigator.addView("Choose", ViewChooseServices.class);
+        //navigator.addView("view1", View1.class);
+        //navigator.addView("view2", View2.class);
 
+        if (navigator.getCurrentView() == null)
+           navigator.navigateTo("Choose");
 
-        mainLayout.addComponent(u);
-
-        setContent(mainLayout);
+        setContent(v);
     }
 
     @Override

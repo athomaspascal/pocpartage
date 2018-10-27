@@ -1,7 +1,7 @@
 package com.start;
 
 
-import com.BookExample.BookExampleBundle;
+import com.BookExample.TheServices;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
@@ -13,9 +13,12 @@ import com.vaadinupload.AdvancedFileDownloader;
 import com.vaadinupload.FileSystemDataProvider;
 import com.vaadinupload.ImageReceiver;
 import dap.entities.JPAService;
+import dap.entities.share.ShareSpace;
+import dap.entities.share.shareRepository;
 import dap.entities.team.Team;
 import dap.entities.user.User;
 import dap.entities.user.UserRepository;
+import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 
@@ -27,23 +30,20 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class UploadTestComponent extends CustomComponent implements BookExampleBundle {
+public class ListServicesComponent extends CustomComponent implements TheServices {
     private static final long serialVersionUID = -4292553844521293140L;
     private TreeGrid treeGrid;
     String user;
-
+    VerticalLayout vLayoutDownload = new VerticalLayout();
     public String getUser() {
         return user;
     }
-
     public void setUser(String user) {
         this.user = user;
     }
 
-
-
-    public void init(String context) {
-        HorizontalLayout layout = new HorizontalLayout();
+    public void init(String context,String choixServices) {
+        CssLayout layout = new CssLayout();
         VerticalLayout vLayout = new VerticalLayout();
 
         if ("basic".equals(context))
@@ -60,13 +60,11 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         setCompositionRoot(layout);
     }
 
-    void basic(VerticalLayout layout) {
+
+    public void basic(VerticalLayout layout) {
         final Image image = new Image("");
         image.setVisible(false);
-
-
         ImageReceiver receiver = new ImageReceiver(image);
-
         // Create the upload with a caption and set receiver later
         final Upload upload = new Upload("Clik on the Button", receiver);
         upload.setButtonCaption("Start Upload");
@@ -103,19 +101,10 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
 
         // Put the components in a panel
         Panel panel = new Panel("Upload File on the server");
+        panel.setResponsive(true);
         VerticalLayout panelContent = new VerticalLayout();
         panelContent.setMargin(true);
-
-        List<String> data = new ArrayList<>();
-        EntityManager entityManager = JPAService.getFactory().createEntityManager();
-        User user = UserRepository.getByName(this.user, entityManager);
-        Team t = user.getTeamid();
-
-        data.add(t.getNomteam());
-
-
-
-
+        List<String> data = getTargetList();
         RadioButtonGroup<String> targetGroup = new RadioButtonGroup<String>("Select a Target Group ", data);
         targetGroup.setItemCaptionGenerator(item -> "Group " + item);
         targetGroup.setSelectedItem(data.get(0));
@@ -123,18 +112,8 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         //layout.addComponent(targetGroup);
         panelContent.addComponents(upload, image, targetGroup);
         panel.setContent(panelContent);
-        // END-EXAMPLE: component.upload.basic
 
-        // Create uploads directory
-        Properties application = new Properties();
-        String loadDirectory = "c:\\tmp";
-        try {
-            application.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"));
-            loadDirectory =application.getProperty("upload.dir");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        File uploads = new File(loadDirectory );
+        File uploads = getFileDirectoryUpload();
         if (!uploads.exists() && !uploads.mkdir())
             layout.addComponent(new Label("ERROR: Could not create upload dir"));
 
@@ -143,8 +122,26 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         layout.addComponent(panel);
     }
 
+    @NotNull
+    private List<String> getTargetList() {
+        List<String> data = new ArrayList<>();
+        EntityManager entityManager = JPAService.getFactory().createEntityManager();
+        User user = UserRepository.getByName(this.user, entityManager);
+        if(user!=null)
+        {
+            Team t = user.getTeamid();
+            data.add(t.getNomteam());
+        }
 
-    void advanced(VerticalLayout layout) {
+        List<ShareSpace> shareSpaces = shareRepository.findAll("");
+        for(ShareSpace shareSpace : shareSpaces)
+        {
+            data.add(shareSpace.getShareSpaceName());
+        }
+        return data;
+    }
+
+    public void advanced(VerticalLayout layout) {
         // BEGIN-EXAMPLE: component.upload.advanced
         class UploadBox extends CustomComponent
                 implements Receiver, ProgressListener,
@@ -270,37 +267,69 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
 
     public void partageComponent(VerticalLayout mainLayout) {
         Panel panel = new Panel("Sharing file");
-        panel.setWidth("720");
+        panel.setWidth("800");
         Label info = new Label("Select a file");
         HorizontalLayout panelContent = new HorizontalLayout();
-        panelContent.setMargin(true);
+
+        //panelContent.setMargin(false);
+        panelContent.setHeight("100%");
         if (treeGrid == null)
-            treeGrid = displayGrid(true);
+            treeGrid = displayGrid(null,true);
         Panel panelDestination = new Panel("Destination");
         Label infoDestination = new Label("Select a Destination");
         List<String> data = new ArrayList<>();
         EntityManager entityManager = JPAService.getFactory().createEntityManager();
         User user = UserRepository.getByName(this.user, entityManager);
-        Team t = user.getTeamid();
-        data.add(t.getNomteam());
+        if(user!=null)
+        {
+            Team t = user.getTeamid();
+            data.add(t.getNomteam());
+        }
 
+        List<ShareSpace> shareSpaces = shareRepository.findAll("");
+        for(ShareSpace shareSpace : shareSpaces)
+        {
+            data.add(shareSpace.getShareSpaceName());
+        }
         VerticalLayout v1 = new VerticalLayout();
+        v1.setMargin(false);
         VerticalLayout v2 = new VerticalLayout();
+        v2.setMargin(false);
         RadioButtonGroup<String> targetGroup = new RadioButtonGroup<String>("Select a Target Group ", data);
         targetGroup.setItemCaptionGenerator(item -> "Group " + item);
         targetGroup.setSelectedItem(data.get(0));
         targetGroup.setCaption("Select a Target group");
         VerticalLayout v3 = new VerticalLayout();
         v3.addComponents(targetGroup);
+        v3.setSizeUndefined();
+
         panelDestination.setContent(v3);
+
         Button copy = new Button("Copy");
         v2.addComponents(infoDestination, panelDestination,copy);
+        HorizontalLayout hori = new HorizontalLayout();
+        TextField directory = new TextField("Directory :");
+        directory.setValue(new File(".").getAbsolutePath());
+        directory.setSizeFull();
 
+        Button changeDirectory = new Button("Change Directory");
+        changeDirectory.addClickListener(eventChange->
+        {
+            TreeGrid oldTreegrid = treeGrid;
+            treeGrid = new TreeGrid();
+            treeGrid = displayGrid(directory.getValue());
+            treeGrid.setSizeUndefined();
+            v1.replaceComponent(oldTreegrid,treeGrid);
 
-        v1.addComponents(info,treeGrid);
+        });
+        hori.addComponents(directory,changeDirectory);
+        hori.setSizeFull();
+        hori.setComponentAlignment(changeDirectory,Alignment.BOTTOM_RIGHT);
+        v1.setSizeUndefined();
+        v1.addComponents(info,hori,treeGrid);
         panelContent.addComponents(v1,v2);
         panel.setContent(panelContent);
-        panel.setSizeFull();
+        //panel.setSizeFull();
         mainLayout.addComponent(panel);
     }
 
@@ -314,10 +343,10 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         inputFilepathField.setWidth("600");
         Button select = new Button("Select");
         select.addClickListener(eventChoose ->{
-           Window newWindow = new Window();
-           VerticalLayout vWindow = new VerticalLayout();
-           Label liste = new Label("File list");
-           treeGrid = displayGrid();
+           Window newWindow = new Window("Choose a file to download");
+           vLayoutDownload =new VerticalLayout();
+
+           treeGrid = displayGrid(null);
            Button selectionFichier = new Button("OK");
            selectionFichier.addClickListener(selection-> {
                Set<File> selectionFiles = treeGrid.getSelectedItems();
@@ -328,11 +357,30 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
                newWindow.close();
 
            });
-           vWindow.addComponents(liste,treeGrid,selectionFichier);
+           HorizontalLayout hori = new HorizontalLayout();
+           TextField directory = new TextField("Directory :");
+           directory.setValue(new File(".").getAbsolutePath());
+           directory.setSizeFull();
 
-           newWindow.setContent(vWindow);
+           Button changeDirectory = new Button("Change Directory");
+           changeDirectory.addClickListener(eventChange->
+           {
+               TreeGrid oldTreegrid = treeGrid;
+               treeGrid = new TreeGrid();
+               treeGrid = displayGrid(directory.getValue());
+               vLayoutDownload.replaceComponent(oldTreegrid,treeGrid);
+
+           });
+           hori.addComponents(directory,changeDirectory);
+           hori.setSizeFull();
+           hori.setComponentAlignment(changeDirectory,Alignment.BOTTOM_RIGHT);
+           vLayoutDownload.addComponents(hori,treeGrid,selectionFichier);
+           newWindow.setContent(vLayoutDownload);
            newWindow.setWidth("700");
            newWindow.center();
+           newWindow.setDraggable(true);
+           newWindow.setResizable(true);
+           newWindow.setStyleName("v-window-bluewindow");
            mainLayout.getUI().getUI().addWindow(newWindow);
         });
         h.addComponents(inputFilepathField,select);
@@ -343,7 +391,6 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         VerticalLayout panelContent = new VerticalLayout();
         panelContent.setMargin(true);
         Button downloadButton = new Button("Download Button");
-
 
         panelContent.addComponents(h, downloadButton);
         panel.setContent(panelContent);
@@ -386,17 +433,18 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         mainLayout.addComponent(panel);
     }
 
-    public TreeGrid  displayGrid()
+    public TreeGrid  displayGrid(String directory)
     {
-        return displayGrid(false);
+        return displayGrid(directory,false);
     }
 
-    public TreeGrid  displayGrid(boolean fullSize)
-    {
+    public TreeGrid  displayGrid(String directory,boolean fullSize)    {
         //-----------------------
         TreeGrid<File> newTreeGrid = new TreeGrid<>();
 
-        newTreeGrid.setDataProvider(new FileSystemDataProvider(new File(".")));
+        if (directory == null) directory = ".";
+
+        newTreeGrid.setDataProvider(new FileSystemDataProvider(new File(directory)));
 
         newTreeGrid.addColumn(file -> {
             String iconHtml;
@@ -426,4 +474,19 @@ public class UploadTestComponent extends CustomComponent implements BookExampleB
         //-------------------------
     }
 
+    public File getFileDirectoryUpload()
+    {
+        // END-EXAMPLE: component.upload.basic
+
+        // Create uploads directory
+        Properties application = new Properties();
+        String loadDirectory = "c:\\tmp";
+        try {
+            application.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"));
+            loadDirectory =application.getProperty("upload.dir");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new File(loadDirectory );
+    }
 }
