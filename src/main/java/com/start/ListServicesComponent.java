@@ -5,8 +5,12 @@ import com.BookExample.TheServices;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
+import com.vaadin.shared.ui.dnd.DropEffect;
+import com.vaadin.shared.ui.dnd.EffectAllowed;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Upload.*;
+import com.vaadin.ui.dnd.DragSourceExtension;
+import com.vaadin.ui.dnd.DropTargetExtension;
 import com.vaadin.ui.renderers.DateRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
 import com.vaadinupload.AdvancedFileDownloader;
@@ -31,37 +35,43 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ListServicesComponent extends CustomComponent implements TheServices {
-    private static final long serialVersionUID = -4292553844521293140L;
+
     private TreeGrid treeGrid;
+    private TreeGrid treeZipGrid;
     String user;
     VerticalLayout vLayoutDownload = new VerticalLayout();
+    HorizontalLayout mainLayout = new HorizontalLayout();
     public String getUser() {
         return user;
     }
     public void setUser(String user) {
         this.user = user;
     }
+    ViewServices myParentView;
 
-    public void init(String context,String choixServices) {
-        CssLayout layout = new CssLayout();
-        VerticalLayout vLayout = new VerticalLayout();
+    public void init(String context, String choixServices, ViewServices parentView) {
+        myParentView = parentView;
+        if (choixServices!= null && choixServices.substring(0,1).equalsIgnoreCase("1"))
+        {
+            if ("basic".equals(context))
+                basic();
+            else if ("advanced".equals(context))
+                advanced();
+            else
+                mainLayout.addComponent(new Label("Invalid context: " + context));
+        }
+        if (choixServices!= null && choixServices.substring(1,2).equalsIgnoreCase("1"))
+            downloadComponent();
+        if (choixServices!= null && choixServices.substring(2,3).equalsIgnoreCase("1"))
+           sharingComponent();
+        if (choixServices!= null && choixServices.substring(3,4).equalsIgnoreCase("1"))
+            zipComponent();
+        setCompositionRoot(mainLayout);
 
-        if ("basic".equals(context))
-            basic(vLayout);
-        else if ("advanced".equals(context))
-            advanced(vLayout);
-        else
-            layout.addComponent(new Label("Invalid context: " + context));
-        VerticalLayout vLayout2 = new VerticalLayout();
-
-        downloadComponent(vLayout2);
-        partageComponent(vLayout2);
-        layout.addComponents(vLayout,vLayout2);
-        setCompositionRoot(layout);
     }
 
 
-    public void basic(VerticalLayout layout) {
+    public void basic() {
         final Image image = new Image("");
         image.setVisible(false);
         ImageReceiver receiver = new ImageReceiver(image);
@@ -109,39 +119,67 @@ public class ListServicesComponent extends CustomComponent implements TheService
         targetGroup.setItemCaptionGenerator(item -> "Group " + item);
         targetGroup.setSelectedItem(data.get(0));
 
-        //layout.addComponent(targetGroup);
+        //mainLayout.addComponent(targetGroup);
         panelContent.addComponents(upload, image, targetGroup);
         panel.setContent(panelContent);
 
         File uploads = getFileDirectoryUpload();
         if (!uploads.exists() && !uploads.mkdir())
-            layout.addComponent(new Label("ERROR: Could not create upload dir"));
+            mainLayout.addComponent(new Label("ERROR: Could not create upload dir"));
 
         ((VerticalLayout) panel.getContent()).setSpacing(true);
         panel.setWidth("-1");
-        layout.addComponent(panel);
+        panel.setResponsive(true);
+
+        /*
+        Window uploadWindow = new Window();
+        uploadWindow.setContent(panel);
+        **/
+
+        DragSourceExtension<Panel> myDragSource = new DragSourceExtension<>(panel);
+
+        // set the allowed effect
+        myDragSource.setEffectAllowed(EffectAllowed.MOVE);
+        // set the text to transfer
+        myDragSource.setDataTransferText("hello receiver");
+        // set other data to transfer (in this case HTML)
+        myDragSource.setDataTransferData("text/html", "<label>hello receiver</label>");
+
+        DropTargetExtension<HorizontalLayout> dropTarget = new DropTargetExtension<>(mainLayout);
+        dropTarget.setDropEffect(DropEffect.MOVE);
+
+        dropTarget.addDropListener(event -> {
+            // if the drag source is in the same UI as the target
+            Optional<AbstractComponent> dragSource = event.getDragSourceComponent();
+            if (dragSource.isPresent() && dragSource.get() instanceof Label) {
+                // move the label to the layout
+                mainLayout.addComponent(dragSource.get());
+
+                /*
+                // get possible transfer data
+                String message = event.getDataTransferData("text/html");
+                if (message != null) {
+                    Notification.show("DropEvent with data transfer html: " + message);
+                } else {
+                    // get transfer text
+                    message = event.getDataTransferText();
+                    Notification.show("DropEvent with data transfer text: " + message);
+                }
+                */
+
+                // handle possible server side drag data, if the drag source was in the same UI
+                /*
+                event.getDragData().ifPresent(eventData -> handleMyDragData((MyObject) eventData));
+                */
+            }
+        });
+
+
+        mainLayout.addComponent(panel);
+
     }
 
-    @NotNull
-    private List<String> getTargetList() {
-        List<String> data = new ArrayList<>();
-        EntityManager entityManager = JPAService.getFactory().createEntityManager();
-        User user = UserRepository.getByName(this.user, entityManager);
-        if(user!=null)
-        {
-            Team t = user.getTeamid();
-            data.add(t.getNomteam());
-        }
-
-        List<ShareSpace> shareSpaces = shareRepository.findAll("");
-        for(ShareSpace shareSpace : shareSpaces)
-        {
-            data.add(shareSpace.getShareSpaceName());
-        }
-        return data;
-    }
-
-    public void advanced(VerticalLayout layout) {
+    public void advanced() {
         // BEGIN-EXAMPLE: component.upload.advanced
         class UploadBox extends CustomComponent
                 implements Receiver, ProgressListener,
@@ -238,34 +276,11 @@ public class ListServicesComponent extends CustomComponent implements TheService
         }
 
         UploadBox uploadbox = new UploadBox();
-        layout.addComponent(uploadbox);
+        mainLayout.addComponent(uploadbox);
         // END-EXAMPLE: component.upload.advanced
     }
 
-    private StreamResource createResource() {
-        return new StreamResource(new StreamSource() {
-
-            @Override
-            public InputStream getStream() {
-                String text = "My image";
-
-                BufferedImage bi = new BufferedImage(100, 30, BufferedImage.TYPE_3BYTE_BGR);
-                bi.getGraphics().drawChars(text.toCharArray(), 0, text.length(), 10, 20);
-
-                try {
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    ImageIO.write(bi, "png", bos);
-                    return new ByteArrayInputStream(bos.toByteArray());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-
-            }
-        }, "myImage.png");
-    }
-
-    public void partageComponent(VerticalLayout mainLayout) {
+    public void sharingComponent() {
         Panel panel = new Panel("Sharing file");
         panel.setWidth("800");
         Label info = new Label("Select a file");
@@ -274,7 +289,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
         //panelContent.setMargin(false);
         panelContent.setHeight("100%");
         if (treeGrid == null)
-            treeGrid = displayGrid(null,true);
+            treeGrid = getGrid(null,true,false);
         Panel panelDestination = new Panel("Destination");
         Label infoDestination = new Label("Select a Destination");
         List<String> data = new ArrayList<>();
@@ -317,7 +332,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
         {
             TreeGrid oldTreegrid = treeGrid;
             treeGrid = new TreeGrid();
-            treeGrid = displayGrid(directory.getValue());
+            treeGrid = getGrid(directory.getValue());
             treeGrid.setSizeUndefined();
             v1.replaceComponent(oldTreegrid,treeGrid);
 
@@ -333,7 +348,61 @@ public class ListServicesComponent extends CustomComponent implements TheService
         mainLayout.addComponent(panel);
     }
 
-    public void downloadComponent(VerticalLayout mainLayout) {
+    public void zipComponent() {
+        Panel panel = new Panel("Zip files");
+        panel.setWidth("800");
+        Label info = new Label("Select files to zip");
+        VerticalLayout panelContent = new VerticalLayout();
+
+        //panelContent.setMargin(false);
+        panelContent.setHeight("100%");
+        if (treeZipGrid == null)
+            treeZipGrid = getGrid(null,true,true);
+
+
+
+
+        Button zip = new Button("Zip");
+
+
+        TextField directory = new TextField("Directory :");
+        directory.setValue(new File(".").getAbsolutePath());
+        directory.setSizeFull();
+        treeZipGrid.setSizeFull();
+        Button changeDirectory = new Button("Change Directory");
+        HorizontalLayout hori = new HorizontalLayout();
+        hori.addComponents(directory,changeDirectory);
+        hori.setSizeFull();
+        hori.setComponentAlignment(changeDirectory,Alignment.BOTTOM_RIGHT);
+        changeDirectory.addClickListener(eventChange->
+        {
+            TreeGrid oldTreegrid = treeZipGrid;
+            treeZipGrid = new TreeGrid();
+            treeZipGrid = getGrid(directory.getValue());
+            treeZipGrid.setSizeUndefined();
+            panelContent.replaceComponent(oldTreegrid,treeZipGrid);
+
+        });
+
+        HorizontalLayout horizontalLayout = new HorizontalLayout();
+        FormLayout horiCeiling = new FormLayout();
+        horiCeiling.setMargin(false);
+        TextField zipFileName = new TextField("Zip File Name");
+        horiCeiling.setSizeFull();
+        zipFileName.setSizeFull();
+        horiCeiling.addComponent(zipFileName);
+
+
+        horizontalLayout.setSizeFull();
+        horizontalLayout.addComponents(horiCeiling,zip);
+        //horizontalLayout.setComponentAlignment(zip,Alignment.BOTTOM_RIGHT);
+        panelContent.addComponents(info,hori,treeZipGrid,horizontalLayout);
+        panel.setContent(panelContent);
+        //panel.setSizeFull();
+        mainLayout.addComponent(panel);
+    }
+
+    public void downloadComponent() {
 
         TextField inputFilepathField = new TextField();
         inputFilepathField.setSizeFull();
@@ -346,7 +415,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
            Window newWindow = new Window("Choose a file to download");
            vLayoutDownload =new VerticalLayout();
 
-           treeGrid = displayGrid(null);
+           treeGrid = getGrid(null);
            Button selectionFichier = new Button("OK");
            selectionFichier.addClickListener(selection-> {
                Set<File> selectionFiles = treeGrid.getSelectedItems();
@@ -367,7 +436,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
            {
                TreeGrid oldTreegrid = treeGrid;
                treeGrid = new TreeGrid();
-               treeGrid = displayGrid(directory.getValue());
+               treeGrid = getGrid(directory.getValue());
                vLayoutDownload.replaceComponent(oldTreegrid,treeGrid);
 
            });
@@ -433,18 +502,20 @@ public class ListServicesComponent extends CustomComponent implements TheService
         mainLayout.addComponent(panel);
     }
 
-    public TreeGrid  displayGrid(String directory)
+    public TreeGrid getGrid(String directory)
     {
-        return displayGrid(directory,false);
+        return getGrid(directory,false,false);
     }
 
-    public TreeGrid  displayGrid(String directory,boolean fullSize)    {
+    public TreeGrid getGrid(String directory, boolean fullSize,boolean multi)    {
         //-----------------------
         TreeGrid<File> newTreeGrid = new TreeGrid<>();
 
         if (directory == null) directory = ".";
 
         newTreeGrid.setDataProvider(new FileSystemDataProvider(new File(directory)));
+        if (multi)
+        newTreeGrid.setSelectionMode(Grid.SelectionMode.MULTI);
 
         newTreeGrid.addColumn(file -> {
             String iconHtml;
@@ -474,8 +545,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
         //-------------------------
     }
 
-    public File getFileDirectoryUpload()
-    {
+    public File getFileDirectoryUpload()    {
         // END-EXAMPLE: component.upload.basic
 
         // Create uploads directory
@@ -488,5 +558,47 @@ public class ListServicesComponent extends CustomComponent implements TheService
             e.printStackTrace();
         }
         return new File(loadDirectory );
+    }
+
+    private StreamResource createResource() {
+        return new StreamResource(new StreamSource() {
+
+            @Override
+            public InputStream getStream() {
+                String text = "My image";
+
+                BufferedImage bi = new BufferedImage(100, 30, BufferedImage.TYPE_3BYTE_BGR);
+                bi.getGraphics().drawChars(text.toCharArray(), 0, text.length(), 10, 20);
+
+                try {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    ImageIO.write(bi, "png", bos);
+                    return new ByteArrayInputStream(bos.toByteArray());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+
+            }
+        }, "myImage.png");
+    }
+
+    @NotNull
+    private List<String> getTargetList() {
+        List<String> data = new ArrayList<>();
+        EntityManager entityManager = JPAService.getFactory().createEntityManager();
+        User user = UserRepository.getByName(this.user, entityManager);
+        if(user!=null)
+        {
+            Team t = user.getTeamid();
+            data.add(t.getNomteam());
+        }
+
+        List<ShareSpace> shareSpaces = shareRepository.findAll("");
+        for(ShareSpace shareSpace : shareSpaces)
+        {
+            data.add(shareSpace.getShareSpaceName());
+        }
+        return data;
     }
 }

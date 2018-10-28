@@ -33,7 +33,7 @@ public class VaadinUI extends UI implements Upload.Receiver, Upload.SucceededLis
         parameterMap = request.getParameterMap();
         VerticalLayout v = new VerticalLayout();
         navigator = new Navigator(this, v);
-        navigator.addView("Default", ViewDefault.class);
+        navigator.addView("Default", ViewServices.class);
         navigator.addView("Choose", ViewChooseServices.class);
         //navigator.addView("view1", View1.class);
         //navigator.addView("view2", View2.class);

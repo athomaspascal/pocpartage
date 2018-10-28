@@ -31,6 +31,13 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
+    <repositories>
+        <repository>
+            <id>vaadin-addons</id>
+            <url>http://maven.vaadin.com/vaadin-addons</url>
+        </repository>
+    </repositories>
+
 
 	<dependencies>
         <dependency>
@@ -83,6 +90,14 @@
 			<artifactId>hibernate-entitymanager</artifactId>
 			<version>LATEST</version>
 		</dependency>
+
+        <!--
+		<dependency>
+			<groupId>org.vaadin.addons</groupId>
+			<artifactId>dragdroplayouts</artifactId>
+			<version>1.4.2</version>
+		</dependency>
+		-->
 
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

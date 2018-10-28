@@ -7,18 +7,15 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 
-public class ViewDefault extends Panel implements View {
+public class ViewServices extends Panel implements View {
     Label userLabel;
-    String choixServices;
-    public ViewDefault() {
-        VerticalLayout mainLayout = new VerticalLayout();
-        userLabel = new Label("User");
-        ListServicesComponent u = new ListServicesComponent();
-        u.init("basic",choixServices);
-        mainLayout.addComponents(userLabel,u);
-        mainLayout.setMargin(false);
-        this.setContent(mainLayout);
+    String choixServices = "00000000";
+    VerticalLayout mainLayout = new VerticalLayout();
 
+    public ViewServices() {
+        userLabel = new Label("User");
+        mainLayout.addComponents(userLabel);
+        this.setContent(mainLayout);
     }
 
     @Override
@@ -33,9 +30,15 @@ public class ViewDefault extends Panel implements View {
                     user.setStyleName("titre");
                     ((Layout)getContent()).replaceComponent(userLabel,user);
                 }
-                if (msg.indexOf("Choix") ==0 ) {
-                    int posValue= msg.indexOf("=");
+                if (msg.indexOf("choix") ==0 ) {
+                    int posValue= msg.indexOf("=")+1;
                     this.choixServices = msg.substring(posValue);
+
+                    ListServicesComponent list = new ListServicesComponent();
+                    list.init("basic",choixServices,this);
+                    mainLayout.setResponsive(true);
+                    //mainLayout.setMargin(false);
+                    mainLayout.addComponents(list);
                 }
 
             }
