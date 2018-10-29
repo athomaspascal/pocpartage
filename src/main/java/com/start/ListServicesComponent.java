@@ -25,6 +25,7 @@ import dap.entities.user.UserRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
+import zip.ZipMultipleFiles;
 
 import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
@@ -33,9 +34,10 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class ListServicesComponent extends CustomComponent implements TheServices {
-
+    private static final Logger logger = Logger.getLogger(AdvancedFileDownloader.class.getName());
     private TreeGrid treeGrid;
     private TreeGrid treeZipGrid;
     String user;
@@ -359,12 +361,6 @@ public class ListServicesComponent extends CustomComponent implements TheService
         if (treeZipGrid == null)
             treeZipGrid = getGrid(null,true,true);
 
-
-
-
-        Button zip = new Button("Zip");
-
-
         TextField directory = new TextField("Directory :");
         directory.setValue(new File(".").getAbsolutePath());
         directory.setSizeFull();
@@ -391,9 +387,23 @@ public class ListServicesComponent extends CustomComponent implements TheService
         horiCeiling.setSizeFull();
         zipFileName.setSizeFull();
         horiCeiling.addComponent(zipFileName);
-
-
         horizontalLayout.setSizeFull();
+        Button zip = new Button("Zip");
+        zip.addClickListener(eventZip-> {
+            Set<File> selectedItems = treeZipGrid.getSelectedItems();
+            File[] listFiles= new File[selectedItems.size()];
+
+            int i=0;
+            for(File oneFile:selectedItems)
+            {
+                listFiles[i] = oneFile;
+                i++;
+            }
+
+            ZipMultipleFiles.zipAction(listFiles,zipFileName.getValue());
+
+
+        });
         horizontalLayout.addComponents(horiCeiling,zip);
         //horizontalLayout.setComponentAlignment(zip,Alignment.BOTTOM_RIGHT);
         panelContent.addComponents(info,hori,treeZipGrid,horizontalLayout);
