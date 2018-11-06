@@ -68,6 +68,8 @@ public class ListServicesComponent extends CustomComponent implements TheService
            sharingComponent();
         if (choixServices!= null && choixServices.substring(3,4).equalsIgnoreCase("1"))
             zipComponent();
+        if (choixServices!= null && choixServices.substring(5,6).equalsIgnoreCase("1"))
+            launchComponent();
         setCompositionRoot(mainLayout);
 
     }
@@ -510,6 +512,60 @@ public class ListServicesComponent extends CustomComponent implements TheService
         });
 
         mainLayout.addComponent(panel);
+    }
+
+    public void launchComponent()
+    {
+        Panel panelTarget = new Panel("Target");
+        VerticalLayout verticalTarget = new VerticalLayout();
+        FormLayout formLayout = new FormLayout();
+        TextField hostname= new TextField("Hostname");
+
+        Panel panelNow = new Panel("Launch Now");
+        VerticalLayout verticalNow = new VerticalLayout();
+        FormLayout formLayoutNow = new FormLayout();
+        TextField directory= new TextField("Directory");
+        TextField command= new TextField("Command");
+        Button launchCommand = new Button("Launch Now");
+        formLayoutNow.addComponents(directory,command);
+        verticalNow.addComponents(formLayoutNow,launchCommand);
+        verticalNow.setHeight("285");
+        formLayout.addComponents(hostname);
+        verticalTarget.addComponents(formLayout);
+        verticalTarget.setHeight("285");
+        panelTarget.setContent(verticalTarget);
+
+        verticalNow.setComponentAlignment(launchCommand,Alignment.BOTTOM_RIGHT);
+        panelNow.setContent(verticalNow);
+
+        Panel panelLater = new Panel("Launch Later");
+        VerticalLayout verticalLayout = new VerticalLayout();
+        HorizontalLayout horizontalLayout = new HorizontalLayout();
+        List<String> data = Arrays.asList("hours","minutes");
+        RadioButtonGroup<String> unit = new RadioButtonGroup<String>("Select your UNIT", data);
+        List<String> dataUnit = Arrays.asList("5","10","15","specific");
+        RadioButtonGroup<String> factor = new RadioButtonGroup<String>("Select your factor", dataUnit);
+        unit.setSelectedItem(data.get(0));
+        factor.setSelectedItem(dataUnit.get(0));
+
+        TextField specific = new TextField("");
+        horizontalLayout.addComponents(unit,factor,specific);
+
+        specific.setWidth("50");
+
+        horizontalLayout.setMargin(false);
+        //verticalLayout.setSpacing(false);
+        Button launchLater = new Button("Launch Later");
+        HorizontalLayout horizontalLayout1 = new HorizontalLayout();
+        horizontalLayout1.addComponents(launchLater);
+
+        verticalLayout.addComponents(horizontalLayout,horizontalLayout1,launchLater);
+        horizontalLayout.setComponentAlignment(specific,Alignment.BOTTOM_RIGHT);
+        verticalLayout.setComponentAlignment(launchLater,Alignment.BOTTOM_RIGHT);
+        horizontalLayout1.setWidth("300");
+        panelLater.setContent(verticalLayout);
+        verticalLayout.setHeight("285");
+        mainLayout.addComponents(panelTarget,panelNow,panelLater);
     }
 
     public TreeGrid getGrid(String directory)
