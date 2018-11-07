@@ -54,7 +54,7 @@ public class ViewChooseServices extends VerticalLayout implements View {
                     listeDesChoix= listeDesChoix.substring(0,7) + "1" ;
             }
 
-            this.getUI().getNavigator().navigateTo("Default/Utilisateur=user2&choix=" + listeDesChoix);
+            this.getUI().getNavigator().navigateTo("Default/Utilisateur=pascal&choix=" + listeDesChoix);
 
 
 

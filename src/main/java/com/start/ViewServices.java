@@ -23,18 +23,20 @@ public class ViewServices extends Panel implements View {
         if(event.getParameters() != null){
             // split at "/", add each part as a label
             String[] msgs = event.getParameters().split("&");
+            String userParam = null;
             for (String msg : msgs) {
                 if (msg.indexOf("Utilisateur") ==0 )
                 {
                     Label user= new Label((msg));
                     user.setStyleName("titre");
                     ((Layout)getContent()).replaceComponent(userLabel,user);
+                    userParam = msg.substring(msg.indexOf("=") +1);
                 }
                 if (msg.indexOf("choix") ==0 ) {
                     int posValue= msg.indexOf("=")+1;
                     this.choixServices = msg.substring(posValue);
 
-                    ListServicesComponent list = new ListServicesComponent();
+                    ListServicesComponent list = new ListServicesComponent(userParam);
                     list.init("basic",choixServices,this);
                     mainLayout.setResponsive(true);
                     //mainLayout.setMargin(false);

@@ -17,6 +17,8 @@ import com.vaadinupload.AdvancedFileDownloader;
 import com.vaadinupload.FileSystemDataProvider;
 import com.vaadinupload.ImageReceiver;
 import dap.entities.JPAService;
+import dap.entities.actions.Servers;
+import dap.entities.actions.ServersRepository;
 import dap.entities.share.ShareSpace;
 import dap.entities.share.shareRepository;
 import dap.entities.team.Team;
@@ -25,6 +27,7 @@ import dap.entities.user.UserRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
+import ssh.UserAuthKI;
 import zip.ZipMultipleFiles;
 
 import javax.imageio.ImageIO;
@@ -50,6 +53,10 @@ public class ListServicesComponent extends CustomComponent implements TheService
         this.user = user;
     }
     ViewServices myParentView;
+
+    ListServicesComponent(String myUser){
+        user = myUser;
+    }
 
     public void init(String context, String choixServices, ViewServices parentView) {
         myParentView = parentView;
@@ -514,12 +521,26 @@ public class ListServicesComponent extends CustomComponent implements TheService
         mainLayout.addComponent(panel);
     }
 
-    public void launchComponent()
-    {
+    public void launchComponent()    {
         Panel panelTarget = new Panel("Target");
         VerticalLayout verticalTarget = new VerticalLayout();
         FormLayout formLayout = new FormLayout();
-        TextField hostname= new TextField("Hostname");
+
+
+        EntityManager em = JPAService.getFactory().createEntityManager();
+        Collection<String> hostNames = ServersRepository.listAllServers(em);
+        em.close();
+
+        ComboBox<String> hostname = new ComboBox<>("Select your server", hostNames);
+
+        hostname.setPlaceholder("No country selected");
+
+
+        // Disallow null selections
+        hostname.setEmptySelectionAllowed(false);
+
+        // Set full width
+        hostname.setWidth(100.0f, Unit.PERCENTAGE);
 
         Panel panelNow = new Panel("Launch Now");
         VerticalLayout verticalNow = new VerticalLayout();
@@ -531,7 +552,39 @@ public class ListServicesComponent extends CustomComponent implements TheService
         verticalNow.addComponents(formLayoutNow,launchCommand);
         verticalNow.setHeight("285");
         formLayout.addComponents(hostname);
-        verticalTarget.addComponents(formLayout);
+        Button testServer = new Button("Test Server Connection");
+        testServer.addClickListener(eventTest->{
+            UserAuthKI userAuthKI = new UserAuthKI();
+            String[] args = new String[4];
+            args[0] = getUser();
+            args[1] = hostname.getValue();
+            EntityManager emTest = JPAService.getFactory().createEntityManager();
+            Servers servers = ServersRepository.listAllServers(hostname.getValue(), emTest);
+
+            args[1] = servers.getServerIp();
+            User userEntity = UserRepository.getByName(getUser(), emTest);
+            emTest.close();
+            args[2] = userEntity.getPassword();
+            boolean success = userAuthKI.testConnect(args);
+            logger.info("Connection:" + success);
+            Window winResultat = new Window("Connection test");
+            VerticalLayout vtest = new VerticalLayout();
+            Label resultat;
+            if (success)
+                resultat = new Label("Resultat : SUCCESS" );
+            else
+                resultat = new Label("Resultat : FAILED" );
+            Button close = new Button("Close");
+            vtest.addComponents(resultat,close);
+            winResultat.setContent(vtest);
+            winResultat.center();
+            winResultat.setWidth("200");
+            this.getParent().getUI().addWindow(winResultat);
+
+
+        });
+        verticalTarget.addComponents(formLayout,testServer);
+        verticalTarget.setComponentAlignment(testServer,Alignment.BOTTOM_RIGHT);
         verticalTarget.setHeight("285");
         panelTarget.setContent(verticalTarget);
 
@@ -667,4 +720,5 @@ public class ListServicesComponent extends CustomComponent implements TheService
         }
         return data;
     }
+
 }
