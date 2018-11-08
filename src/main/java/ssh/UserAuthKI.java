@@ -64,7 +64,8 @@ public class UserAuthKI {
              channel.connect();
             else {
                 //*********************************************
-                execCommand("(" + command + "&); echo PID=$!", channel);
+                execCommand(command,channel);
+                // execCommand("(" + command + "&); echo PID=$!", channel);
 
             }
 
