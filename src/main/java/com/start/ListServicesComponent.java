@@ -524,7 +524,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
     public void launchComponent()    {
         Panel panelTarget = new Panel("Target");
         VerticalLayout verticalTarget = new VerticalLayout();
-        FormLayout formLayout = new FormLayout();
+
 
 
         EntityManager em = JPAService.getFactory().createEntityManager();
@@ -533,7 +533,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
 
         ComboBox<String> hostname = new ComboBox<>("Select your server", hostNames);
 
-        hostname.setPlaceholder("No country selected");
+        hostname.setPlaceholder("No server selected");
 
 
         // Disallow null selections
@@ -551,7 +551,7 @@ public class ListServicesComponent extends CustomComponent implements TheService
         formLayoutNow.addComponents(directory,command);
         verticalNow.addComponents(formLayoutNow,launchCommand);
         verticalNow.setHeight("285");
-        formLayout.addComponents(hostname);
+
         Button testServer = new Button("Test Server Connection");
         testServer.addClickListener(eventTest->{
             UserAuthKI userAuthKI = new UserAuthKI();
@@ -575,15 +575,21 @@ public class ListServicesComponent extends CustomComponent implements TheService
             else
                 resultat = new Label("Resultat : FAILED" );
             Button close = new Button("Close");
+            close.addClickListener(eventClose->{
+               winResultat.close();
+            });
             vtest.addComponents(resultat,close);
+            vtest.setComponentAlignment(close,Alignment.MIDDLE_CENTER);
             winResultat.setContent(vtest);
             winResultat.center();
             winResultat.setWidth("200");
+            winResultat.setStyleName("v-window-bluewindow");
+            winResultat.addStyleName("v-window");
             this.getParent().getUI().addWindow(winResultat);
 
 
         });
-        verticalTarget.addComponents(formLayout,testServer);
+        verticalTarget.addComponents(hostname,testServer);
         verticalTarget.setComponentAlignment(testServer,Alignment.BOTTOM_RIGHT);
         verticalTarget.setHeight("285");
         panelTarget.setContent(verticalTarget);

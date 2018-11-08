@@ -1,28 +1,25 @@
 package ssh;/* -*-mode:java; c-basic-offset:2; indent-tabs-mode:nil -*- */
 
-import lib.multi.Channel;
-import lib.multi.JSch;
-import lib.multi.Session;
-import lib.multi.UserInfo;
+import lib.multi.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class UserAuthKI {
     boolean flag=false;
 
     public static void main(String[] args) {
         UserAuthKI userAuthKI = new UserAuthKI();
-        userAuthKI.connect(args,true);
-
-        System.out.println("Resultat:" + userAuthKI.flag);
+        userAuthKI.connect(args,true,"ls -ldt *");
     }
 
     public boolean testConnect(String[] args) {
-        connect(args,true);
+        connect(args,true,null);
         return flag;
     }
 
-    public void connect(String[] args,boolean stopAfterCOnnect) {
+    public void connect(String[] args,boolean stopafterConnect,String command) {
 
         try {
             JSch.setLogger(new Logger.MyLogger());
@@ -48,9 +45,13 @@ public class UserAuthKI {
             ((MyUserInfo) ui).passwd = password;
             session.setUserInfo(ui);
             session.connect();
-            Channel channel = session.openChannel("shell");
+            Channel channel=null;
+            if (command != null)
+                channel = session.openChannel("exec");
+            else
+                channel = session.openChannel("shell");
 
-            if (stopAfterCOnnect) {
+            if (stopafterConnect) {
                 channel.setInputStream(System.in, true);
                 channel.setOutputStream(System.out, true);
             }
@@ -59,10 +60,18 @@ public class UserAuthKI {
                 channel.setOutputStream(System.out);
             }
 
-            channel.connect();
+            if (command == null)
+             channel.connect();
+            else {
+                //*********************************************
+                execCommand("(" + command + "&); echo PID=$!", channel);
+
+            }
+
+            //********************************************
             if (channel.isConnected())
                 flag = true;
-            if (stopAfterCOnnect){
+            if (stopafterConnect){
                 //channel.disconnect();
                 /*
                 channel.getOutputStream().close();
@@ -75,6 +84,33 @@ public class UserAuthKI {
         finally {
             if (flag)
                 JSch.getLogger().log(lib.multi.Logger.INFO,"SUCCESS");
+        }
+    }
+
+    private void execCommand(String command, Channel channel) throws IOException, JSchException {
+        ((ChannelExec) channel).setCommand(command );
+        channel.setInputStream(null);
+        ((ChannelExec) channel).setErrStream(System.err);
+        InputStream in = channel.getInputStream();
+        channel.connect();
+        if (channel.isConnected())
+            flag = true;
+        byte[] tmp = new byte[1024];
+        while (true) {
+            while (in.available() > 0) {
+                int i = in.read(tmp, 0, 1024);
+                if (i < 0) break;
+                System.out.print(new String(tmp, 0, i));
+            }
+            if (channel.isClosed()) {
+                System.out.println("exit-status: " + channel.getExitStatus());
+                break;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (Exception ee) {
+
+            }
         }
     }
 

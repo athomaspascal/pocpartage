@@ -11,6 +11,7 @@
         <class>dap.entities.formulaire.FormulaireResultat</class>
         <class>dap.entities.share.ShareSpace</class>
         <class>dap.entities.actions.Servers</class>
+        <class>dap.entities.actions.HistoryActions</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:~/h2"/>

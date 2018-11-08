@@ -1,18 +1,25 @@
 package ssh;/* -*-mode:java; c-basic-offset:2; indent-tabs-mode:nil -*- */
 
+import dap.entities.actions.HistoryActions;
+import dap.entities.actions.HistoryActionsRepository;
 import lib.multi.*;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.InputStream;
+import java.sql.Date;
 
 public class Exec {
-    public static void main(String[] arg) {
+    public static void main(String[] args) {
         try {
             JSch jsch = new JSch();
-            String host = null;
-            host = "pascal@192.168.1.98";
+            String userName = "pascal";
+            if (args.length > 0 && args[0] != null)
+                userName = args[0];
+            String hostName = "192.168.91.128";
+            if (args.length > 1 && args[1] != null)
+                hostName = args[1];
+
+            String host = userName + "@" + hostName;
             jsch.setKnownHosts(new File("known_host").getAbsolutePath());
             //jsch.addIdentity(new File("rsa_key").getAbsolutePath(), "");
             String user = host.substring(0, host.indexOf('@'));
@@ -20,24 +27,35 @@ public class Exec {
 
             Session session = jsch.getSession(user, host, 22);
             UserInfo ui = new MyUserInfo();
+            String password = "pascal67";
+            if (args.length > 2 && args[2] != null)
+                password = args[2];
+            ((ssh.MyUserInfo) ui).passwd = password;
+
             session.setUserInfo(ui);
             session.connect();
 
-            String command = JOptionPane.showInputDialog("Enter command","set|grep SSH");
+            String command;
+            if (args.length > 2 && args[2] != null)
+                command = args[2];
+            else
+                command = "pwd";
+
 
             Channel channel = session.openChannel("exec");
+            HistoryActions historyActions = new HistoryActions();
+            historyActions.setAction(command);
+            historyActions.setDateAction(new Date(new java.util.Date().getTime()));
+            historyActions.setServerName(hostName);
+            historyActions.setUserName(userName);
+            HistoryActionsRepository.add(historyActions);
+
+
             ((ChannelExec) channel).setCommand(command);
-
-
             channel.setInputStream(null);
-
-
             ((ChannelExec) channel).setErrStream(System.err);
-
             InputStream in = channel.getInputStream();
-
             channel.connect();
-
             byte[] tmp = new byte[1024];
             while (true) {
                 while (in.available() > 0) {
@@ -52,6 +70,7 @@ public class Exec {
                 try {
                     Thread.sleep(1000);
                 } catch (Exception ee) {
+
                 }
             }
             channel.disconnect();
@@ -61,6 +80,7 @@ public class Exec {
         }
     }
 
+    /*
     public static class MyUserInfo implements UserInfo, UIKeyboardInteractive {
         public String getPassword() {
             return passwd;
@@ -89,7 +109,7 @@ public class Exec {
         }
 
         public boolean promptPassword(String message) {
-            passwd = "marie9607";
+
             return true;
 
         }
@@ -155,4 +175,5 @@ public class Exec {
             }
         }
     }
+    */
 }
