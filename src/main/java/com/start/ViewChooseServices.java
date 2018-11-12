@@ -14,6 +14,8 @@ public class ViewChooseServices extends VerticalLayout implements View {
     private final String launchprogram= "Launch Program";
     private final String deferredprogram = "Deferred Execution Program";
     private final String regularprogram = "Batch Regular Program";
+    private final String listprogram = "List Runnning Programs";
+    private final String killprogram = "Kill Runnning Programs";
 
 
     String test = new String();
@@ -28,11 +30,11 @@ public class ViewChooseServices extends VerticalLayout implements View {
 
         CheckBoxGroup<String> comboBox = new CheckBoxGroup<>("");
         comboBox.setItems(upload,download,sharefiles,zipfiles,archivefiles,
-                launchprogram,deferredprogram,regularprogram);
+                launchprogram,deferredprogram,regularprogram,listprogram,killprogram);
         Button exec= new Button("Execute");
 
         exec.addClickListener(event -> {
-            String listeDesChoix = "00000000";
+            String listeDesChoix = "0000000000";
             Set<String> listChoix = comboBox.getSelectedItems();
             for(String choix:listChoix)
             {
@@ -51,7 +53,11 @@ public class ViewChooseServices extends VerticalLayout implements View {
                 if (choix.equalsIgnoreCase(deferredprogram))
                     listeDesChoix= listeDesChoix.substring(0,6) + "1" +listeDesChoix.substring(7);
                 if (choix.equalsIgnoreCase(regularprogram))
-                    listeDesChoix= listeDesChoix.substring(0,7) + "1" ;
+                    listeDesChoix= listeDesChoix.substring(0,7) + "1" +listeDesChoix.substring(8);
+                if (choix.equalsIgnoreCase(listprogram))
+                    listeDesChoix= listeDesChoix.substring(0,8) + "1" +listeDesChoix.substring(9);
+                if (choix.equalsIgnoreCase(killprogram))
+                    listeDesChoix= listeDesChoix.substring(0,9) + "1" +listeDesChoix.substring(10);
             }
 
             this.getUI().getNavigator().navigateTo("Default/Utilisateur=pascal&choix=" + listeDesChoix);

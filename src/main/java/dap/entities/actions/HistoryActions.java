@@ -14,7 +14,7 @@ public class HistoryActions {
     private Date dateAction;
     private Integer exitCode;
     private Integer pid;
-    private Integer dateEnd;
+    private Date dateEnd;
 
     @Id
     @Column(name = "ID", nullable = false)
@@ -89,11 +89,11 @@ public class HistoryActions {
 
     @Basic
     @Column(name = "DATE_END", nullable = true)
-    public Integer getDateEnd() {
+    public Date getDateEnd() {
         return dateEnd;
     }
 
-    public void setDateEnd(Integer dateEnd) {
+    public void setDateEnd(Date dateEnd) {
         this.dateEnd = dateEnd;
     }
 

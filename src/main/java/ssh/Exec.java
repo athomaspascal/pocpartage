@@ -6,7 +6,6 @@ import lib.multi.*;
 
 import java.io.File;
 import java.io.InputStream;
-import java.sql.Date;
 
 public class Exec {
     public static void main(String[] args) {
@@ -33,7 +32,16 @@ public class Exec {
             ((ssh.MyUserInfo) ui).passwd = password;
 
             session.setUserInfo(ui);
+            session.setUserInfo(ui);
+
+            HistoryActions hi = new HistoryActions();
+            HistoryActionsRepository.add(hi);
+            session.connectWithId(hi.getId());
+            //session.connect();
+
+            /*
             session.connect();
+            */
 
             String command;
             if (args.length > 2 && args[2] != null)
@@ -43,13 +51,6 @@ public class Exec {
 
 
             Channel channel = session.openChannel("exec");
-            HistoryActions historyActions = new HistoryActions();
-            historyActions.setAction(command);
-            historyActions.setDateAction(new Date(new java.util.Date().getTime()));
-            historyActions.setServerName(hostName);
-            historyActions.setUserName(userName);
-            HistoryActionsRepository.add(historyActions);
-
 
             ((ChannelExec) channel).setCommand(command);
             channel.setInputStream(null);

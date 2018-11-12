@@ -434,6 +434,7 @@ public abstract class Channel implements Runnable {
     void write(byte[] foo, int s, int l) throws IOException {
         try {
             io.put(foo, s, l);
+
         } catch (NullPointerException e) {
         }
     }

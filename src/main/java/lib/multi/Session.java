@@ -144,6 +144,8 @@ public class Session implements Runnable {
     String username = null;
     byte[] password = null;
 
+    int idOperation=0;
+
     JSch jsch;
 
     Session(JSch jsch) throws JSchException {
@@ -157,12 +159,25 @@ public class Session implements Runnable {
         connect(timeout);
     }
 
+    public void connectWithId(int newId) throws JSchException {
+        idOperation = newId;
+        connect();
+    }
+
+    public void connect(int connectTimeout,int newId) throws JSchException {
+        idOperation = newId;
+        connect(connectTimeout);
+    }
+
     public void connect(int connectTimeout) throws JSchException {
         if (isConnected) {
             throw new JSchException("session is already connected");
         }
-
-        io = new IO();
+        if (idOperation!=0)
+        {
+            io = new IO(idOperation);
+        }
+        else  io = new IO();
         if (random == null) {
             try {
                 Class c = Class.forName(getConfig("random"));

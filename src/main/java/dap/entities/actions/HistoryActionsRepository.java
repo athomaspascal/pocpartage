@@ -27,6 +27,7 @@ public class HistoryActionsRepository {
         );
     }
 
+
     public static HistoryActions save(HistoryActions historyActions) { 
             return JPAService.runInTransaction(em -> em.merge(historyActions));
     }
@@ -34,26 +35,31 @@ public class HistoryActionsRepository {
 
 
     public static HistoryActions add(HistoryActions historyActions) {
-        JPAService.runInTransaction(em -> {
-            em.persist(historyActions);
-            HistoryActionsRepository.historyActions = historyActions;
-            return null;
-        });
-        return HistoryActionsRepository.historyActions;
+        return JPAService.runInTransaction(em -> em.merge(historyActions));
+
+        //return HistoryActionsRepository.historyActions;
+
     }
 
 
     public static void delete(HistoryActions historyActions) {
         JPAService.runInTransaction(em -> {
-            em.remove(getById((long) historyActions.getId(), em));
+            em.remove(getById((int) historyActions.getId(), em));
             return null;
         });
     }
 
-    private static HistoryActions getById(Long id, EntityManager em) {
+    private static HistoryActions getById(int id, EntityManager em) {
         Query query = em.createQuery("select u from HistoryActions u where u.id=:id");
         query.setParameter("id", id);
+        return (HistoryActions) query.getResultList().stream().findFirst().orElse(null);
+    }
 
+    public static HistoryActions getByPid(int pid, EntityManager em) {
+        Query query = em.createQuery(
+                "select u from HistoryActions u " +
+                " where u.pid=:pid");
+        query.setParameter("pid", pid);
         return (HistoryActions) query.getResultList().stream().findFirst().orElse(null);
     }
 

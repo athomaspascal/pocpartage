@@ -32,88 +32,115 @@ package lib.multi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Properties;
 
-public class IO{
-  InputStream in;
-  OutputStream out;
-  OutputStream out_ext;
+public class IO {
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(IO.class.getName());
+    InputStream in;
+    OutputStream out;
+    OutputStream out_ext;
 
-  private boolean in_dontclose=false;
-  private boolean out_dontclose=false;
-  private boolean out_ext_dontclose=false;
 
-  void setOutputStream(OutputStream out){ this.out=out; }
-  void setOutputStream(OutputStream out, boolean dontclose){
-    this.out_dontclose=dontclose;
-    setOutputStream(out);
-  }
-  void setExtOutputStream(OutputStream out){ this.out_ext=out; }
-  void setExtOutputStream(OutputStream out, boolean dontclose){
-    this.out_ext_dontclose=dontclose;
-    setExtOutputStream(out);
-  }
-  void setInputStream(InputStream in){ this.in=in; }
-  void setInputStream(InputStream in, boolean dontclose){
-    this.in_dontclose=dontclose;
-    setInputStream(in);
-  }
+    private boolean in_dontclose = false;
+    private boolean out_dontclose = false;
+    private boolean out_ext_dontclose = false;
+    private int idOperation=0;
 
-  public void put(Packet p) throws IOException, java.net.SocketException {
-    out.write(p.buffer.buffer, 0, p.buffer.index);
-    out.flush();
-  }
-  void put(byte[] array, int begin, int length) throws IOException {
-    out.write(array, begin, length);
-    out.flush();
-  }
-  void put_ext(byte[] array, int begin, int length) throws IOException {
-    out_ext.write(array, begin, length);
-    out_ext.flush();
-  }
 
-  int getByte() throws IOException {
-    return in.read();
-  }
+    public IO() {
 
-  void getByte(byte[] array) throws IOException {
-    getByte(array, 0, array.length);
-  }
-
-  void getByte(byte[] array, int begin, int length) throws IOException {
-    do{
-      int completed = in.read(array, begin, length);
-      if(completed<0){
-	throw new IOException("End of IO Stream Read");
-      }
-      begin+=completed;
-      length-=completed;
     }
-    while (length>0);
-  }
 
-  void out_close(){
-    try{
-      if(out!=null && !out_dontclose) out.close();
-      out=null;
+    public IO(int newID) {
+        idOperation=newID;
     }
-    catch(Exception ee){}
-  }
 
-  public void close(){
-    try{
-      if(in!=null && !in_dontclose) in.close();
-      in=null;
+
+    void setOutputStream(OutputStream out) {
+        this.out = out;
     }
-    catch(Exception ee){}
 
-    out_close();
-
-    try{
-      if(out_ext!=null && !out_ext_dontclose) out_ext.close();
-      out_ext=null;
+    void setOutputStream(OutputStream out, boolean dontclose) {
+        this.out_dontclose = dontclose;
+        setOutputStream(out);
     }
-    catch(Exception ee){}
-  }
+
+    void setExtOutputStream(OutputStream out) {
+        this.out_ext = out;
+    }
+
+    void setExtOutputStream(OutputStream out, boolean dontclose) {
+        this.out_ext_dontclose = dontclose;
+        setExtOutputStream(out);
+    }
+
+    void setInputStream(InputStream in) {
+        this.in = in;
+    }
+
+    void setInputStream(InputStream in, boolean dontclose) {
+        this.in_dontclose = dontclose;
+        setInputStream(in);
+    }
+
+    public void put(Packet p) throws IOException, java.net.SocketException {
+        out.write(p.buffer.buffer, 0, p.buffer.index);
+        out.flush();
+    }
+
+    void put(byte[] array, int begin, int length) throws IOException {
+        out.write(array, begin, length);
+        out.flush();
+    }
+
+    void put_ext(byte[] array, int begin, int length) throws IOException {
+        out_ext.write(array, begin, length);
+        out_ext.flush();
+    }
+
+    int getByte() throws IOException {
+        return in.read();
+    }
+
+    void getByte(byte[] array) throws IOException {
+        getByte(array, 0, array.length);
+    }
+
+    void getByte(byte[] array, int begin, int length) throws IOException {
+        do {
+            int completed = in.read(array, begin, length);
+            if (completed < 0) {
+                throw new IOException("End of IO Stream Read");
+            }
+            begin += completed;
+            length -= completed;
+        }
+        while (length > 0);
+    }
+
+    void out_close() {
+        try {
+            if (out != null && !out_dontclose) out.close();
+            out = null;
+        } catch (Exception ee) {
+        }
+    }
+
+    public void close() {
+        try {
+            if (in != null && !in_dontclose) in.close();
+            in = null;
+        } catch (Exception ee) {
+        }
+
+        out_close();
+
+        try {
+            if (out_ext != null && !out_ext_dontclose) out_ext.close();
+            out_ext = null;
+        } catch (Exception ee) {
+        }
+    }
 
   /*
   public void finalize() throws Throwable{
@@ -131,4 +158,23 @@ public class IO{
     catch(Exception ee){}
   }
   */
+
+  static public String getLogFile(int idOperation) {
+      Properties config = new Properties();
+      String configFile = "config.properties";
+      String directory = "/tmp";
+      String file = "log";
+      try {
+          config.load(Thread.currentThread().
+                  getContextClassLoader().
+                  getResourceAsStream(configFile));
+          if (config.getProperty("log.directory") != null)
+              directory = config.getProperty("log.directory");
+          if (config.getProperty("log.file") != null)
+              file = config.getProperty("log.file");
+      } catch (Exception e) {
+
+      }
+      return directory + "/" + file +"." + idOperation + ".out";
+  }
 }
