@@ -43,9 +43,11 @@ public class ListServicesComponent extends CustomComponent implements TheService
     private static final Logger logger = Logger.getLogger(AdvancedFileDownloader.class.getName());
     private TreeGrid treeGrid;
     private TreeGrid treeZipGrid;
-    String user;
+    private String user;
     VerticalLayout vLayoutDownload = new VerticalLayout();
     HorizontalLayout mainLayout = new HorizontalLayout();
+    private String hostname;
+
     public String getUser() {
         return user;
     }
@@ -53,9 +55,11 @@ public class ListServicesComponent extends CustomComponent implements TheService
         this.user = user;
     }
     ViewServices myParentView;
+    EntityManager emTest = JPAService.getFactory().createEntityManager();
 
     ListServicesComponent(String myUser){
         user = myUser;
+
     }
 
     public void init(String context, String choixServices, ViewServices parentView) {
@@ -529,24 +533,27 @@ public class ListServicesComponent extends CustomComponent implements TheService
 
         EntityManager em = JPAService.getFactory().createEntityManager();
         Collection<String> hostNames = ServersRepository.listAllServers(em);
-        em.close();
+        //em.close();
 
         ComboBox<String> hostname = new ComboBox<>("Select your server", hostNames);
 
         hostname.setPlaceholder("No server selected");
-
-
         // Disallow null selections
         hostname.setEmptySelectionAllowed(false);
 
         // Set full width
         hostname.setWidth(100.0f, Unit.PERCENTAGE);
+        hostname.addValueChangeListener(hostnameEvent->{
+           setHostname(hostnameEvent.getValue());
+        });
 
         Panel panelNow = new Panel("Launch Now");
         VerticalLayout verticalNow = new VerticalLayout();
         FormLayout formLayoutNow = new FormLayout();
         TextField directory= new TextField("Directory");
+        directory.setWidth("350");
         TextField command= new TextField("Command");
+        command.setWidth("350");
         Button launchCommand = new Button("Launch Now");
         formLayoutNow.addComponents(directory,command);
         verticalNow.addComponents(formLayoutNow,launchCommand);
@@ -558,13 +565,9 @@ public class ListServicesComponent extends CustomComponent implements TheService
             String[] args = new String[4];
             args[0] = getUser();
             args[1] = hostname.getValue();
-            EntityManager emTest = JPAService.getFactory().createEntityManager();
-            Servers servers = ServersRepository.listAllServers(hostname.getValue(), emTest);
 
-            args[1] = servers.getServerIp();
-            User userEntity = UserRepository.getByName(getUser(), emTest);
-            emTest.close();
-            args[2] = userEntity.getPassword();
+            args[1] = getServerIp();
+            args[2]= getPassword();
             boolean success = userAuthKI.testConnect(args);
             logger.info("Connection:" + success);
             Window winResultat = new Window("Connection test");
@@ -593,6 +596,17 @@ public class ListServicesComponent extends CustomComponent implements TheService
         verticalTarget.setComponentAlignment(testServer,Alignment.BOTTOM_RIGHT);
         verticalTarget.setHeight("285");
         panelTarget.setContent(verticalTarget);
+        launchCommand.addClickListener(launchEvent-> {
+            String[] args = new String[3];
+            args[0] = getUser();
+            args[1] = hostname.getValue();
+            args[2] = getPassword();
+            ProgressWindow win = new ProgressWindow();
+            getUI().addWindow(win);
+            win.execCommand(args,true,command.getValue(),false);
+
+
+        });
 
         verticalNow.setComponentAlignment(launchCommand,Alignment.BOTTOM_RIGHT);
         panelNow.setContent(verticalNow);
@@ -625,6 +639,24 @@ public class ListServicesComponent extends CustomComponent implements TheService
         panelLater.setContent(verticalLayout);
         verticalLayout.setHeight("285");
         mainLayout.addComponents(panelTarget,panelNow,panelLater);
+    }
+
+    private void setHostname(String value) {
+        hostname=value;
+    }
+
+    private String getPassword() {
+        User userEntity = UserRepository.getByName(getUser(), emTest);
+        return userEntity.getPassword();
+    }
+    private String getServerIp()
+    {
+        Servers servers = ServersRepository.listAllServers(getHostname(), emTest);
+        return servers.getServerIp();
+    }
+
+    private String getHostname() {
+        return hostname;
     }
 
     public TreeGrid getGrid(String directory)
@@ -726,5 +758,6 @@ public class ListServicesComponent extends CustomComponent implements TheService
         }
         return data;
     }
+
 
 }

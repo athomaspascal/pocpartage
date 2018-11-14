@@ -39,23 +39,6 @@ public class User {
     @Column(name = "MATRICULE", nullable = false)
     private int matricule;
 
-
-    /*
-    public long getTeamID() {
-        return teamID;
-    }
-
-    public void setTeamID(long teamID) {
-        this.teamID = teamID;
-    }
-    */
-
-    /*
-    @NotNull
-    @Column(name = "TEAMID_ID", nullable = false)
-    private long teamID;
-    */
-
     @NotNull
     @Email
     private String email;

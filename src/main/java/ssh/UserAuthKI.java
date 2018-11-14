@@ -13,21 +13,35 @@ import java.util.Properties;
 
 public class UserAuthKI {
     boolean flag=false;
+
+    public int getExitStatus() {
+        return exitStatus;
+    }
+
+    public void setExitStatus(int exitStatus) {
+        this.exitStatus = exitStatus;
+    }
+
     int exitStatus=-1;
 
     static org.apache.logging.log4j.Logger logger = LogManager.getLogger("elastic-generator");
 
     public static void main(String[] args) {
         UserAuthKI userAuthKI = new UserAuthKI();
-        userAuthKI.connect(args,true,"ls -ldt *");
+        userAuthKI.connect(args,true,"ls -ldt *",true);
     }
 
     public boolean testConnect(String[] args) {
-        connect(args,true,null);
+        connect(args,true,null,true);
         return flag;
     }
 
     public void connect(String[] args,boolean stopafterConnect,String command) {
+        connect(args,stopafterConnect,command,false);
+
+    }
+
+    public void connect(String[] args,boolean stopafterConnect,String command,boolean closeFactory) {
         try {
             JSch.setLogger(new Logger.MyLogger());
             JSch jsch = new JSch();
@@ -65,6 +79,7 @@ public class UserAuthKI {
             EntityManager entityManager = JPAService.getFactory().createEntityManager();
             hi = HistoryActionsRepository.getByPid(random,entityManager);
 
+            if (closeFactory)
             entityManager.close();
 
 
@@ -116,8 +131,9 @@ public class UserAuthKI {
                 while ((thisLine = br.readLine()) != null) {
                     if (thisLine.indexOf("PIDPROCESS") >=0)
                     {
-                        hi.setPid(Integer.valueOf(thisLine.substring(11)));
+                        hi.setPid(Integer.valueOf(thisLine.substring(thisLine.indexOf("PIDPROCESS")+ 11)));
                         HistoryActionsRepository.save(hi);
+                        if (closeFactory)
                         JPAService.getFactory().close();
                     }
                 }
@@ -138,8 +154,11 @@ public class UserAuthKI {
             }
         }
         finally {
-            if (JPAService.getFactory().isOpen())
-                JPAService.getFactory().close();
+            if (closeFactory){
+                if (JPAService.getFactory().isOpen())
+                    JPAService.getFactory().close();
+
+            }
             if (flag)
                 System.out.println("Command executed");
         }
