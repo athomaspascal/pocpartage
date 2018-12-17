@@ -12,6 +12,7 @@
         <class>dap.entities.share.ShareSpace</class>
         <class>dap.entities.actions.Servers</class>
         <class>dap.entities.actions.HistoryActions</class>
+        <class>dap.entities.services.Services</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:~/h2"/>

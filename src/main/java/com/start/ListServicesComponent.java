@@ -745,10 +745,14 @@ public class ListServicesComponent extends CustomComponent implements TheService
         List<String> data = new ArrayList<>();
         EntityManager entityManager = JPAService.getFactory().createEntityManager();
         User user = UserRepository.getByName(this.user, entityManager);
+        logger.info("User:" + user.getNom());
         if(user!=null)
         {
             Team t = user.getTeamid();
-            data.add(t.getNomteam());
+            if (t == null)
+                logger.info("Error Team not Found ");
+            else
+                data.add(t.getNomteam());
         }
 
         List<ShareSpace> shareSpaces = shareRepository.findAll("");

@@ -51,7 +51,12 @@ public class ProgressWindow extends Window {
         new Thread(() -> {
             UserAuthKI userAuthKI = new UserAuthKI();
             userAuthKI.connect(args,stopAfterConnecte,command,closeFactory);
-            updateStatus("Status:" + userAuthKI.getExitStatus());
+            if (userAuthKI.getExitStatus() == 0)
+                updateStatus("Status:" + " SUCCESS ");
+            else
+            updateStatus("Status:" + " ECHEC (" + userAuthKI.getExitStatus() + ")");
+
+
 
             focus();
         }).start();

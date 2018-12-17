@@ -1,28 +1,98 @@
 package com.start;
 
+import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.navigator.View;
 import com.vaadin.ui.*;
+import dap.entities.services.Services;
+import dap.entities.services.ServicesRepository;
 
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class ViewChooseServices extends VerticalLayout implements View {
-    private final String download="Download file from server";
-    private final String upload = "Upload to server";
-    private final String sharefiles = "Share Files";
-    private final String zipfiles = "Zip files";
-    private final String archivefiles ="Archive files";
-    private final String launchprogram= "Launch Program";
-    private final String deferredprogram = "Deferred Execution Program";
-    private final String regularprogram = "Batch Regular Program";
-    private final String listprogram = "List Runnning Programs";
-    private final String killprogram = "Kill Runnning Programs";
-
+    private static final Logger logger = Logger.getLogger(ViewChooseServices.class.getName());
 
     String test = new String();
 
     public ViewChooseServices() {
         Label titre = new Label("Choose your services");
         titre.setStyleName("titre");
+        this.setMargin(false);
+        Panel panel = setServicesByTable();
+        addComponents(titre,panel);
+    }
+
+
+    private Panel setServicesByTable()
+    {
+        Panel listServices = new Panel("List Services");
+        List<Services> allServices = ServicesRepository.findAll();
+        String firstFamilyService="";
+
+        TreeData<String> data = new TreeData<>();
+        Tree<String> tree = new Tree<>("Services");
+        int n =0;
+
+        for (Services myService:allServices)
+        {
+            if (!firstFamilyService.equalsIgnoreCase(myService.getServiceFamily()))
+            {
+                data.addItems(null, myService.getServiceFamily());
+                firstFamilyService= myService.getServiceFamily();
+            }
+            data.addItems(firstFamilyService,myService.getServiceName());
+        }
+
+        tree.setDataProvider(new TreeDataProvider<>(data));
+        for (Services myService:allServices)
+        {
+            if (!firstFamilyService.equalsIgnoreCase(myService.getServiceFamily()))
+            {
+                tree.expand(myService.getServiceFamily());
+            }
+        }
+
+        tree.setItemIconGenerator(item -> {
+            if (item.equals("FILE")) {
+                return VaadinIcons.FILE;
+            } else if (item.equals("PROGRAM")) {
+                return VaadinIcons.FILE_PROCESS;
+            } else if (item.equals("STOCKAGE")) {
+                return VaadinIcons.FILE_ZIP;
+            }
+            return null;
+        });
+
+        tree.addItemClickListener(itemClick ->
+        {
+            logger.info("Item:" +itemClick.getItem());
+
+        });
+
+
+        VerticalLayout verticalLayout = new VerticalLayout();
+        verticalLayout.addComponent(tree);
+        listServices.setContent(verticalLayout);
+        return listServices;
+    }
+
+    private Panel setServices()
+    {
+        String download="Download file from server";
+        String upload = "Upload to server";
+        String sharefiles = "Share Files";
+        String zipfiles = "Zip files";
+        String archivefiles ="Archive files";
+        String launchprogram= "Launch Program";
+        String deferredprogram = "Deferred Execution Program";
+        String regularprogram = "Batch Regular Program";
+        String listprogram = "List Runnning Programs";
+        String killprogram = "Kill Runnning Programs";
+
+
         Panel panel = new Panel("Service List");
 
         VerticalLayout vert = new VerticalLayout();
@@ -68,10 +138,7 @@ public class ViewChooseServices extends VerticalLayout implements View {
 
         vert.addComponents(comboBox,exec);
         panel.setContent(vert);
-
-        this.setMargin(false);
-        addComponents(titre,panel);
-
+        return panel;
 
     }
 }
